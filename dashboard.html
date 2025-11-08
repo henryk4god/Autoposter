@@ -674,375 +674,377 @@
         </div>
     </div>
 
-    <script>
-        const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbyjlF8fcu-oXtSPB9MFgtjcRbt8BlheyqR22ADeeK0ijTsTt8oxLBiAB0GzJMzBy2fv-A/exec';
+   <script>
+    const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbwO5f5pe0vXxCd7mpOwn5xEMHewuB_8oZS-HiFbe4akx9u4bPfqGfA8IC_Uuu9FKdIphA/exec';
+    
+    // Get user data from localStorage
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    
+    // Initialize dashboard
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if user is logged in
+        if (!user.email) {
+            window.location.href = 'login.html';
+            return;
+        }
         
-        // Get user data from localStorage
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        // Set user info
+        if (user.name) {
+            document.getElementById('userName').textContent = user.name;
+            document.getElementById('accountName').textContent = user.name;
+            document.getElementById('accountEmail').textContent = user.email;
+            document.getElementById('accountPlan').textContent = user.plan || 'Trial';
+            document.getElementById('accountStatus').textContent = user.status || 'Active';
+            document.getElementById('trialEnd').textContent = user.trialEnd || 'N/A';
+            document.getElementById('userPlan').textContent = user.plan === 'paid' ? 'Pro Plan' : 'Trial Plan';
+        }
         
-        // Initialize dashboard
-        document.addEventListener('DOMContentLoaded', function() {
-            // Set user info
-            if (user.name) {
-                document.getElementById('userName').textContent = user.name;
-                document.getElementById('accountName').textContent = user.name;
-                document.getElementById('accountEmail').textContent = user.email;
-                document.getElementById('accountPlan').textContent = user.plan || 'Trial';
-                document.getElementById('accountStatus').textContent = user.status || 'Active';
-                document.getElementById('trialEnd').textContent = user.trialEnd || 'N/A';
-                document.getElementById('userPlan').textContent = user.plan === 'paid' ? 'Pro Plan' : 'Trial Plan';
-            }
-            
-            // Load dashboard data
-            loadDashboardData();
-            loadUserPosts();
-            loadUserTokens();
-            
-            // Navigation
-            document.querySelectorAll('.nav-link').forEach(link => {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    
-                    // Update active nav link
-                    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-                    this.classList.add('active');
-                    
-                    // Show corresponding section
-                    const sectionId = this.getAttribute('data-section') + 'Section';
-                    document.querySelectorAll('.dashboard-section').forEach(section => {
-                        section.classList.remove('active');
-                    });
-                    document.getElementById(sectionId).classList.add('active');
-                    
-                    // Update page title
-                    document.getElementById('pageTitle').textContent = this.textContent.trim();
+        // Load dashboard data
+        loadDashboardData();
+        loadUserPosts();
+        loadUserTokens();
+        
+        // Navigation
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Update active nav link
+                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Show corresponding section
+                const sectionId = this.getAttribute('data-section') + 'Section';
+                document.querySelectorAll('.dashboard-section').forEach(section => {
+                    section.classList.remove('active');
                 });
-            });
-            
-            // Schedule form submission
-            document.getElementById('scheduleForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                schedulePost();
-            });
-            
-            // Platform form submission
-            document.getElementById('platformForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                connectPlatform();
-            });
-            
-            // Upgrade button
-            document.getElementById('upgradeBtn').addEventListener('click', function() {
-                alert('To upgrade your plan, please contact support or check the pricing page.');
+                document.getElementById(sectionId).classList.add('active');
+                
+                // Update page title
+                document.getElementById('pageTitle').textContent = this.textContent.trim();
             });
         });
         
-        // Load dashboard data
-        function loadDashboardData() {
-            if (!user.email) return;
-            
-            const requestData = {
-                action: 'post.stats',
-                email: user.email
-            };
-            
-            fetch(BACKEND_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-api-key': 'AutoPostr_2025_Secure_Key_v1'
-                },
-                body: JSON.stringify(requestData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success && data.stats) {
-                    document.getElementById('totalPosts').textContent = data.stats.overview.total || 0;
-                    document.getElementById('scheduledPosts').textContent = data.stats.overview.pending || 0;
-                    document.getElementById('publishedPosts').textContent = data.stats.overview.posted || 0;
-                    document.getElementById('connectedPlatforms').textContent = data.summary.connectedPlatforms || 0;
-                }
-            })
-            .catch(error => {
-                console.error('Error loading dashboard data:', error);
-            });
-        }
+        // Schedule form submission
+        document.getElementById('scheduleForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            schedulePost();
+        });
         
-        // Load user posts
-        function loadUserPosts() {
-            if (!user.email) return;
-            
-            const requestData = {
-                action: 'post.list',
-                data: {
-                    email: user.email,
-                    limit: 10
-                }
-            };
-            
-            fetch(BACKEND_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-api-key': 'AutoPostr_2025_Secure_Key_v1'
-                },
-                body: JSON.stringify(requestData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success && data.posts) {
-                    updatePostsTable(data.posts, 'recentPostsTable');
-                    updatePostsTable(data.posts, 'postsTable');
-                }
-            })
-            .catch(error => {
-                console.error('Error loading posts:', error);
-            });
-        }
+        // Platform form submission
+        document.getElementById('platformForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            connectPlatform();
+        });
         
-        // Update posts table
-        function updatePostsTable(posts, tableId) {
-            const tableBody = document.getElementById(tableId);
-            tableBody.innerHTML = '';
-            
-            if (posts.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No posts found</td></tr>';
-                return;
+        // Upgrade button
+        document.getElementById('upgradeBtn').addEventListener('click', function() {
+            alert('To upgrade your plan, please contact support or check the pricing page.');
+        });
+    });
+    
+    // Load dashboard data
+    function loadDashboardData() {
+        if (!user.email) return;
+        
+        const requestData = {
+            action: 'post.stats',
+            email: user.email
+        };
+        
+        fetch(BACKEND_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.stats) {
+                document.getElementById('totalPosts').textContent = data.stats.overview.total || 0;
+                document.getElementById('scheduledPosts').textContent = data.stats.overview.pending || 0;
+                document.getElementById('publishedPosts').textContent = data.stats.overview.posted || 0;
+                document.getElementById('connectedPlatforms').textContent = data.summary.connectedPlatforms || 0;
             }
-            
-            posts.forEach(post => {
-                const row = document.createElement('tr');
-                
-                // Truncate message if too long
-                const message = post.message.length > 50 ? 
-                    post.message.substring(0, 50) + '...' : post.message;
-                
-                // Format date
-                const scheduledTime = new Date(post.scheduled_time).toLocaleString();
-                
-                // Status badge
-                let statusClass = 'status-pending';
-                if (post.status === 'posted') statusClass = 'status-posted';
-                if (post.status === 'failed') statusClass = 'status-failed';
-                
-                row.innerHTML = `
-                    <td>${post.platform}</td>
-                    <td>${message}</td>
-                    <td>${scheduledTime}</td>
-                    <td><span class="status-badge ${statusClass}">${post.status}</span></td>
-                    ${tableId === 'postsTable' ? '<td><button class="btn btn-outline" onclick="deletePost(\'' + post.id + '\')">Delete</button></td>' : ''}
-                `;
-                
-                tableBody.appendChild(row);
-            });
+        })
+        .catch(error => {
+            console.error('Error loading dashboard data:', error);
+        });
+    }
+    
+    // Load user posts
+    function loadUserPosts() {
+        if (!user.email) return;
+        
+        const requestData = {
+            action: 'post.list',
+            data: {
+                email: user.email,
+                limit: 10
+            }
+        };
+        
+        fetch(BACKEND_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.posts) {
+                updatePostsTable(data.posts, 'recentPostsTable');
+                updatePostsTable(data.posts, 'postsTable');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading posts:', error);
+        });
+    }
+    
+    // Update posts table
+    function updatePostsTable(posts, tableId) {
+        const tableBody = document.getElementById(tableId);
+        tableBody.innerHTML = '';
+        
+        if (posts.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No posts found</td></tr>';
+            return;
         }
         
-        // Load user tokens
-        function loadUserTokens() {
-            if (!user.email) return;
+        posts.forEach(post => {
+            const row = document.createElement('tr');
             
-            const requestData = {
-                action: 'token.list',
-                email: user.email
-            };
+            // Truncate message if too long
+            const message = post.message && post.message.length > 50 ? 
+                post.message.substring(0, 50) + '...' : post.message || '';
             
-            fetch(BACKEND_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-api-key': 'AutoPostr_2025_Secure_Key_v1'
-                },
-                body: JSON.stringify(requestData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success && data.tokens) {
-                    updatePlatformsStatus(data.tokens);
-                }
-            })
-            .catch(error => {
-                console.error('Error loading tokens:', error);
-            });
-        }
+            // Format date
+            const scheduledTime = post.scheduled_time ? 
+                new Date(post.scheduled_time).toLocaleString() : 'Not scheduled';
+            
+            // Status badge
+            let statusClass = 'status-pending';
+            if (post.status === 'posted') statusClass = 'status-posted';
+            if (post.status === 'failed') statusClass = 'status-failed';
+            
+            row.innerHTML = `
+                <td>${post.platform || 'Unknown'}</td>
+                <td>${message}</td>
+                <td>${scheduledTime}</td>
+                <td><span class="status-badge ${statusClass}">${post.status || 'pending'}</span></td>
+                ${tableId === 'postsTable' ? '<td><button class="btn btn-outline" onclick="deletePost(\'' + (post.id || '') + '\')">Delete</button></td>' : ''}
+            `;
+            
+            tableBody.appendChild(row);
+        });
+    }
+    
+    // Load user tokens
+    function loadUserTokens() {
+        if (!user.email) return;
         
-        // Update platforms status
-        function updatePlatformsStatus(tokens) {
-            const platforms = ['telegram', 'facebook', 'twitter', 'instagram', 'linkedin'];
-            
-            platforms.forEach(platform => {
-                const statusElement = document.getElementById(platform + 'Status');
-                const button = document.querySelector(`button[data-platform="${platform}"]`);
-                
-                const token = tokens.find(t => t.platform === platform);
-                if (token && token.is_valid) {
-                    statusElement.textContent = 'Connected';
-                    statusElement.className = 'platform-status status-connected';
-                    if (button) button.textContent = 'Reconnect';
-                } else {
-                    statusElement.textContent = 'Not Connected';
-                    statusElement.className = 'platform-status status-disconnected';
-                    if (button) button.textContent = 'Connect';
-                }
-            });
-        }
+        const requestData = {
+            action: 'token.list',
+            email: user.email
+        };
         
-        // Schedule a new post
-        function schedulePost() {
-            const scheduleBtn = document.getElementById('scheduleBtn');
-            const alertMessage = document.getElementById('alertMessage');
+        fetch(BACKEND_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.tokens) {
+                updatePlatformsStatus(data.tokens);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading tokens:', error);
+        });
+    }
+    
+    // Update platforms status
+    function updatePlatformsStatus(tokens) {
+        const platforms = ['telegram', 'facebook', 'twitter', 'instagram', 'linkedin'];
+        
+        platforms.forEach(platform => {
+            const statusElement = document.getElementById(platform + 'Status');
+            const button = document.querySelector(`button[data-platform="${platform}"]`);
             
-            const formData = {
-                action: 'post.create',
-                data: {
-                    email: user.email,
-                    platform: document.getElementById('platformSelect').value,
-                    message: document.getElementById('postMessage').value,
-                    media_url: document.getElementById('mediaUrl').value,
-                    scheduled_time: document.getElementById('scheduledTime').value
-                }
-            };
-            
-            // Show loading state
-            scheduleBtn.textContent = 'Scheduling...';
-            scheduleBtn.disabled = true;
-            
-            // Clear previous alerts
-            alertMessage.style.display = 'none';
-            alertMessage.className = 'alert';
-            
-            fetch(BACKEND_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-api-key': 'AutoPostr_2025_Secure_Key_v1'
-                },
-                body: JSON.stringify(formData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Show success message
-                    alertMessage.textContent = data.message || 'Post scheduled successfully!';
-                    alertMessage.className = 'alert alert-success';
-                    alertMessage.style.display = 'block';
-                    
-                    // Reset form
-                    document.getElementById('scheduleForm').reset();
-                    
-                    // Reload posts
-                    loadUserPosts();
-                    loadDashboardData();
-                } else {
-                    // Show error message
-                    alertMessage.textContent = data.message || 'Failed to schedule post.';
-                    alertMessage.className = 'alert alert-danger';
-                    alertMessage.style.display = 'block';
-                }
-                
-                // Reset button
-                scheduleBtn.textContent = 'Schedule Post';
-                scheduleBtn.disabled = false;
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alertMessage.textContent = 'Network error. Please try again.';
-                alertMessage.className = 'alert alert-danger';
+            const token = tokens.find(t => t.platform === platform);
+            if (token && token.is_valid) {
+                statusElement.textContent = 'Connected';
+                statusElement.className = 'platform-status status-connected';
+                if (button) button.textContent = 'Reconnect';
+            } else {
+                statusElement.textContent = 'Not Connected';
+                statusElement.className = 'platform-status status-disconnected';
+                if (button) button.textContent = 'Connect';
+            }
+        });
+    }
+    
+    // Schedule a new post
+    function schedulePost() {
+        const scheduleBtn = document.getElementById('scheduleBtn');
+        const alertMessage = document.getElementById('alertMessage');
+        
+        const formData = {
+            action: 'post.create',
+            data: {
+                email: user.email,
+                platform: document.getElementById('platformSelect').value,
+                message: document.getElementById('postMessage').value,
+                media_url: document.getElementById('mediaUrl').value,
+                scheduled_time: document.getElementById('scheduledTime').value
+            }
+        };
+        
+        // Show loading state
+        scheduleBtn.textContent = 'Scheduling...';
+        scheduleBtn.disabled = true;
+        
+        // Clear previous alerts
+        alertMessage.style.display = 'none';
+        alertMessage.className = 'alert';
+        
+        fetch(BACKEND_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show success message
+                alertMessage.textContent = data.message || 'Post scheduled successfully!';
+                alertMessage.className = 'alert alert-success';
                 alertMessage.style.display = 'block';
                 
-                // Reset button
-                scheduleBtn.textContent = 'Schedule Post';
-                scheduleBtn.disabled = false;
-            });
-        }
-        
-        // Open platform connection modal
-        function openPlatformModal(platform) {
-            document.getElementById('modalTitle').textContent = `Connect ${platform.charAt(0).toUpperCase() + platform.slice(1)}`;
-            document.getElementById('modalPlatform').value = platform;
-            document.getElementById('platformModal').classList.add('active');
-        }
-        
-        // Close platform connection modal
-        function closePlatformModal() {
-            document.getElementById('platformModal').classList.remove('active');
-            document.getElementById('platformForm').reset();
-        }
-        
-        // Connect platform
-        function connectPlatform() {
-            const connectBtn = document.getElementById('connectBtn');
-            const alertMessage = document.getElementById('alertMessage');
-            
-            const platform = document.getElementById('modalPlatform').value;
-            const formData = {
-                action: 'token.save',
-                data: {
-                    email: user.email,
-                    platform: platform,
-                    token: document.getElementById('platformToken').value,
-                    page_id_chat_id: document.getElementById('platformId').value
-                }
-            };
-            
-            // Show loading state
-            connectBtn.textContent = 'Connecting...';
-            connectBtn.disabled = true;
-            
-            // Clear previous alerts
-            alertMessage.style.display = 'none';
-            alertMessage.className = 'alert';
-            
-            fetch(BACKEND_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-api-key': 'AutoPostr_2025_Secure_Key_v1'
-                },
-                body: JSON.stringify(formData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Show success message
-                    alertMessage.textContent = data.message || 'Platform connected successfully!';
-                    alertMessage.className = 'alert alert-success';
-                    alertMessage.style.display = 'block';
-                    
-                    // Close modal
-                    closePlatformModal();
-                    
-                    // Reload tokens
-                    loadUserTokens();
-                } else {
-                    // Show error message
-                    alertMessage.textContent = data.message || 'Failed to connect platform.';
-                    alertMessage.className = 'alert alert-danger';
-                    alertMessage.style.display = 'block';
-                }
+                // Reset form
+                document.getElementById('scheduleForm').reset();
                 
-                // Reset button
-                connectBtn.textContent = 'Connect Platform';
-                connectBtn.disabled = false;
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alertMessage.textContent = 'Network error. Please try again.';
+                // Reload posts
+                loadUserPosts();
+                loadDashboardData();
+            } else {
+                // Show error message
+                alertMessage.textContent = data.message || 'Failed to schedule post.';
                 alertMessage.className = 'alert alert-danger';
                 alertMessage.style.display = 'block';
-                
-                // Reset button
-                connectBtn.textContent = 'Connect Platform';
-                connectBtn.disabled = false;
-            });
-        }
-        
-        // Delete post (placeholder function)
-        function deletePost(postId) {
-            if (confirm('Are you sure you want to delete this post?')) {
-                // This would call a backend endpoint to delete the post
-                alert('Post deletion would be implemented with a proper backend endpoint.');
             }
+            
+            // Reset button
+            scheduleBtn.textContent = 'Schedule Post';
+            scheduleBtn.disabled = false;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alertMessage.textContent = 'Network error. Please try again.';
+            alertMessage.className = 'alert alert-danger';
+            alertMessage.style.display = 'block';
+            
+            // Reset button
+            scheduleBtn.textContent = 'Schedule Post';
+            scheduleBtn.disabled = false;
+        });
+    }
+    
+    // Open platform connection modal
+    function openPlatformModal(platform) {
+        document.getElementById('modalTitle').textContent = `Connect ${platform.charAt(0).toUpperCase() + platform.slice(1)}`;
+        document.getElementById('modalPlatform').value = platform;
+        document.getElementById('platformModal').classList.add('active');
+    }
+    
+    // Close platform connection modal
+    function closePlatformModal() {
+        document.getElementById('platformModal').classList.remove('active');
+        document.getElementById('platformForm').reset();
+    }
+    
+    // Connect platform
+    function connectPlatform() {
+        const connectBtn = document.getElementById('connectBtn');
+        const alertMessage = document.getElementById('alertMessage');
+        
+        const platform = document.getElementById('modalPlatform').value;
+        const formData = {
+            action: 'token.save',
+            data: {
+                email: user.email,
+                platform: platform,
+                token: document.getElementById('platformToken').value,
+                page_id_chat_id: document.getElementById('platformId').value
+            }
+        };
+        
+        // Show loading state
+        connectBtn.textContent = 'Connecting...';
+        connectBtn.disabled = true;
+        
+        // Clear previous alerts
+        alertMessage.style.display = 'none';
+        alertMessage.className = 'alert';
+        
+        fetch(BACKEND_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show success message
+                alertMessage.textContent = data.message || 'Platform connected successfully!';
+                alertMessage.className = 'alert alert-success';
+                alertMessage.style.display = 'block';
+                
+                // Close modal
+                closePlatformModal();
+                
+                // Reload tokens
+                loadUserTokens();
+            } else {
+                // Show error message
+                alertMessage.textContent = data.message || 'Failed to connect platform.';
+                alertMessage.className = 'alert alert-danger';
+                alertMessage.style.display = 'block';
+            }
+            
+            // Reset button
+            connectBtn.textContent = 'Connect Platform';
+            connectBtn.disabled = false;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alertMessage.textContent = 'Network error. Please try again.';
+            alertMessage.className = 'alert alert-danger';
+            alertMessage.style.display = 'block';
+            
+            // Reset button
+            connectBtn.textContent = 'Connect Platform';
+            connectBtn.disabled = false;
+        });
+    }
+    
+    // Delete post (placeholder function)
+    function deletePost(postId) {
+        if (confirm('Are you sure you want to delete this post?')) {
+            // This would call a backend endpoint to delete the post
+            alert('Post deletion would be implemented with a proper backend endpoint.');
         }
-    </script>
+    }
+</script>
 </body>
 </html>
