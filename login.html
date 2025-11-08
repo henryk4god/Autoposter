@@ -275,79 +275,77 @@
         </div>
     </footer>
 
-    <script>
-        const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbyjlF8fcu-oXtSPB9MFgtjcRbt8BlheyqR22ADeeK0ijTsTt8oxLBiAB0GzJMzBy2fv-A/exec';
+  <script>
+    const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbwO5f5pe0vXxCd7mpOwn5xEMHewuB_8oZS-HiFbe4akx9u4bPfqGfA8IC_Uuu9FKdIphA/exec';
+     document.getElementById('loginForm').addEventListener('submit', function(e) {
+        e.preventDefault();
         
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const loginBtn = document.getElementById('loginBtn');
-            const alertMessage = document.getElementById('alertMessage');
-            
-            // Get form data
-            const formData = {
-                action: 'user.login',
-                data: {
-                    email: document.getElementById('email').value
+        const loginBtn = document.getElementById('loginBtn');
+        const alertMessage = document.getElementById('alertMessage');
+        
+        // Get form data
+        const formData = {
+            action: 'user.login',
+            data: {
+                email: document.getElementById('email').value
+            }
+        };
+        
+        // Show loading state
+        loginBtn.textContent = 'Signing In...';
+        loginBtn.disabled = true;
+        
+        // Clear previous alerts
+        alertMessage.style.display = 'none';
+        alertMessage.className = 'alert';
+        
+        // Send request to backend
+        fetch(BACKEND_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show success message
+                alertMessage.textContent = data.message || 'Login successful!';
+                alertMessage.className = 'alert alert-success';
+                alertMessage.style.display = 'block';
+                
+                // Store user data in localStorage
+                if (data.user) {
+                    localStorage.setItem('user', JSON.stringify(data.user));
                 }
-            };
-            
-            // Show loading state
-            loginBtn.textContent = 'Signing In...';
-            loginBtn.disabled = true;
-            
-            // Clear previous alerts
-            alertMessage.style.display = 'none';
-            alertMessage.className = 'alert';
-            
-            // Send request to backend
-            fetch(BACKEND_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                'x-api-key': 'AutoPostr_2025_Secure_Key_v1'
-                },
-                body: JSON.stringify(formData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Show success message
-                    alertMessage.textContent = data.message || 'Login successful!';
-                    alertMessage.className = 'alert alert-success';
-                    alertMessage.style.display = 'block';
-                    
-                    // Store user data in localStorage
-                    if (data.user) {
-                        localStorage.setItem('user', JSON.stringify(data.user));
-                    }
-                    
-                    // Redirect to dashboard after a short delay
-                    setTimeout(() => {
-                        window.location.href = 'dashboard.html';
-                    }, 1500);
-                } else {
-                    // Show error message
-                    alertMessage.textContent = data.message || 'Invalid email or account not found.';
-                    alertMessage.className = 'alert alert-danger';
-                    alertMessage.style.display = 'block';
-                    
-                    // Reset button
-                    loginBtn.textContent = 'Sign In';
-                    loginBtn.disabled = false;
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alertMessage.textContent = 'Network error. Please try again.';
+                
+                // Redirect to dashboard after a short delay
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 1500);
+            } else {
+                // Show error message
+                alertMessage.textContent = data.message || 'Invalid email or account not found.';
                 alertMessage.className = 'alert alert-danger';
                 alertMessage.style.display = 'block';
                 
                 // Reset button
                 loginBtn.textContent = 'Sign In';
                 loginBtn.disabled = false;
-            });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alertMessage.textContent = 'Network error. Please check your connection and try again.';
+            alertMessage.className = 'alert alert-danger';
+            alertMessage.style.display = 'block';
+            
+            // Reset button
+            loginBtn.textContent = 'Sign In';
+            loginBtn.disabled = false;
         });
-    </script>
+    });
+</script>
 </body>
 </html>
